@@ -1,1 +1,1 @@
-# news-reader-android-app
+# News Reader App - Android Application
