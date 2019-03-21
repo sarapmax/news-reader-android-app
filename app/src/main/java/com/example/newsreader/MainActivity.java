@@ -1,53 +1,45 @@
 package com.example.newsreader;
 
-import android.app.ListActivity;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.Adapter;
-import android.widget.ListView;
-import android.widget.Toast;
+import android.util.Log;
 
-import java.net.URL;
-import java.util.ArrayList;
-
-public class MainActivity extends ListActivity {
-    ArrayList<String> titles;
-    NewsListAdapter adapter;
+public class MainActivity extends AppCompatActivity implements NewsHeadlineFragment.OnHeadlineSelectedListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
 
-        titles = new ArrayList<>();
+        if (findViewById(R.id.fragment_container) != null) {
+            if (savedInstanceState != null) return;
 
-        adapter = new NewsListAdapter(this, titles);
-        setListAdapter(adapter);
-
-        try {
-            URL url = new URL("https://udn.com/rssfeed/news/2/6638?ch=news");
-
-            new NewsSAX(url, new ParserListener() {
-                @Override
-                public void setTitle(final String s) {
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            titles.add(s);
-                            adapter.notifyDataSetChanged();
-                        }
-                    });
-                }
-            });
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
+            NewsHeadlineFragment newsHeadlineFragment = new NewsHeadlineFragment();
+            getSupportFragmentManager().beginTransaction().add(R.id.fragment_container, newsHeadlineFragment).commit();
         }
     }
 
     @Override
-    protected void onListItemClick(ListView l, View v, int position, long id) {
-        super.onListItemClick(l, v, position, id);
+    public void onArticleSelected(int position, String description) {
+        NewsArticleFragment articleFragment = (NewsArticleFragment) getSupportFragmentManager().findFragmentById(R.id.articleView_fragement);
 
-        Toast.makeText(this, titles.get(position), Toast.LENGTH_LONG).show();
+        if (articleFragment != null) {
+            // We're on a large screen device.
+            articleFragment.updateArticleView(position, description);
+        } else {
+            // We're on a small screen device.
+            articleFragment = new NewsArticleFragment();
+
+            Bundle args = new Bundle();
+            args.putInt("NewsId", position);
+            args.putString("NewsDescription", description);
+            articleFragment.setArguments(args);
+
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.fragment_container, articleFragment);
+            transaction.addToBackStack(null);
+            transaction.commit();
+        }
     }
 }

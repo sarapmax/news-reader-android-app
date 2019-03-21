@@ -14,6 +14,7 @@ import javax.xml.parsers.SAXParserFactory;
 
 public class NewsSAX extends DefaultHandler {
     Boolean itemFound = false;
+    Boolean descriptionFound = false;
     ParserListener parserListener;
     String element = "";
 
@@ -45,6 +46,8 @@ public class NewsSAX extends DefaultHandler {
 
         if (localName.equals("item")) {
             itemFound = true;
+        } else if (itemFound && localName.equals("description")) {
+            descriptionFound = true;
         }
 
         element = "";
@@ -54,12 +57,13 @@ public class NewsSAX extends DefaultHandler {
     public void endElement(String uri, String localName, String qName) throws SAXException {
         super.endElement(uri, localName, qName);
 
-//        Log.i(localName);
-
         if (itemFound && localName.equals("title")) {
-            Log.i("URL", element);
-
             parserListener.setTitle(element);
+        } else if (descriptionFound && localName.equals("description")) {
+            Log.i("Description", element);
+            parserListener.setDescription(element);
+
+            descriptionFound = false;
         }
     }
 
